@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground p-4">
+    <div className="pt-16">
       Atharva Splitwise Clone
     </div>
   );
