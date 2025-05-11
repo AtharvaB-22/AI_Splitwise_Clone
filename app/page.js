@@ -132,6 +132,37 @@ export default function Home() {
           </div>
         </div>
       </section>
+      
+      <section className="bg-gradient-to-r from-green-500 to-teal-500 py-20 text-center text-white">
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-3xl md:text-4xl font-bold">
+            Ready to simplify expense sharing?
+          </h2>
+          <p className="mt-4 text-lg md:text-xl">
+            Join thousands of users who have made splitting expenses stress-free.
+          </p>
+          <div className="mt-6">
+            <Button
+              asChild
+              size="lg"
+              className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg shadow-md"
+            >
+              <Link href="/dashboard">
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4 inline" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white py-10">
+        <div className="container mx-auto px-4 md:px-6 text-center">
+          <p className="text-gray-500 text-sm">
+            All rights reserved.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
