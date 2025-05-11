@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 
 export default function Home() {
@@ -49,9 +50,16 @@ export default function Home() {
           </div>
         </div>
 
-        <div>
-          <div>
-
+        <div className="container mx-auto max-w-5xl overflow-hidden rounded-xl shadow-xl">
+          <div className="gradient p-1 aspect-[16/9] "> 
+            <Image 
+            src="/logos/hero.png"
+            width={1280}
+            height={720}  
+            alt="Splitr Hero Image"
+            className="rounded-lg mx-auto"
+            priority
+            />
           </div>
         </div>
       </section>
