@@ -1,4 +1,4 @@
-import { FEATURES, ICONS } from "@/lib/Landing";
+import { FEATURES, ICONS, STEPS } from "@/lib/Landing";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,44 @@ export default function Home() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Steps Section */}
+      <section id="how-it-works" className="bg-white py-20">
+        <div className="container mx-auto px-4 md:px-6 text-center">
+          <Badge variant="outline" className="bg-teal-100 text-teal-700">
+            How It Works
+          </Badge>
+
+          <h2 className="gradient-title mt-2 text-3xl md:text-4xl">
+            Splitting expenses has never been easier
+          </h2>
+
+          <p className="mx-auto mt-3 max-w-[700px] text-gray-500 md:text-xl/relaxed">
+            Follow these easy steps to start splitting expenses.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+            {STEPS.map((step, index) => (
+              <div
+                key={index}
+                className={`p-6 rounded-lg ${
+                  step.label === "2" ? "bg-green-100" : "bg-teal-100"
+                } shadow-md`}
+              >
+                <div
+                  className={`text-4xl ${
+                    step.label === "2" ? "text-green-600" : "text-teal-600"
+                  } font-bold`}
+                >
+                  {step.label}
+                </div>
+                <h3 className="mt-4 text-xl font-bold">{step.title}</h3>
+                <p className="mt-2 text-gray-500">{step.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
