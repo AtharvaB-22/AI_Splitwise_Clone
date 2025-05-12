@@ -5,6 +5,9 @@ import { v } from "convex/values";
 export const getAllContacts = query({
   handler: async (ctx) => {
     const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!currentUser) {
+        throw new Error("Current user not found");
+      }
 
     const expensesYouPaid = await ctx.db
       .query("expenses")
