@@ -7,6 +7,10 @@ import { api } from '@/convex/_generated/api';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useConvexQuery } from '@/hooks/use-convex-query';
+import { query } from '@/convex/_generated/server';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { UserPlus } from 'lucide-react';
 
 const groupSchema = z.object({
     name: z.string().min(1, "Group name is required"),
@@ -21,7 +25,9 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
     const [commandOpen, setCommandOpen] = useState(false);
 
     const { data: currentUser} =useConvexQuery(api.users.getCurrentUser);
-    const { data: searchResults, isLoading: isSearching } =useConvexQuery(api.users.searchUsers, );
+    const { data: searchResults, isLoading: isSearching } =useConvexQuery(api.users.searchUsers,
+        { query:searchQuery}
+     );
 
     const {
         register,
@@ -108,6 +114,24 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                                 <span>{currentUser.name} (You)</span>
                             </Badge>
                             )}
+
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 gap-1 text-x5"
+                                    >
+                                     <UserPlus className="h-3.5 w-3.5" />
+                                        Add Members   
+                                    </Button> 
+
+                                </PopoverTrigger>
+                                <PopoverContent>
+                                 Place content for the popover here.    
+                                </PopoverContent> 
+                            </Popover>
                         </div>
                     </div>
 

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 export const store = mutation({
   args: {},
@@ -100,5 +101,5 @@ export const searchUsers = query({
             email: user.email,
             imageUrl: user.imageUrl,
         }));         
-    }
+    },
 });
