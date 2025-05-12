@@ -11,6 +11,15 @@ import { query } from '@/convex/_generated/server';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+} from '@/components/ui/command';
 
 const groupSchema = z.object({
     name: z.string().min(1, "Group name is required"),
@@ -28,6 +37,13 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
     const { data: searchResults, isLoading: isSearching } =useConvexQuery(api.users.searchUsers,
         { query:searchQuery}
      );
+
+     const addMember = (user) => {
+        if (!selectedMembers.some((member) => member._id === user._id)) {
+          setSelectedMembers([...selectedMembers, user]);
+        }
+        setCommandOpen(false);
+      };
 
     const {
         register,
@@ -115,7 +131,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                             </Badge>
                             )}
 
-                            <Popover>
+                            <Popover open={commandOpen} onOpenChange={setCommandOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
                                       type="button"
@@ -128,9 +144,43 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                                     </Button> 
 
                                 </PopoverTrigger>
-                                <PopoverContent>
-                                 Place content for the popover here.    
-                                </PopoverContent> 
+                                <PopoverContent className="p-0" side="bottom" align="start">
+                                <Command>
+                                    <CommandInput 
+                                        placeholder="Search by name or email ... " 
+                                        value={searchQuery}
+                                        onValueChange={setSearchQuery}
+                                    />
+                                        <CommandList>
+                                        <CommandEmpty>
+                                        {searchQuery.length < 2 ? (
+                                            <p className="py-3 px-4 text-sm text-center text-muted-foreground">
+                                            Type at least 2 characters to search
+                                            </p>
+                                        ) : isSearching ? (
+                                            <p className="py-3 px-4 text-sm text-center text-muted-foreground">
+                                              Searching...
+                                            </p>
+                                          ) : (
+                                            <p className="py-3 px-4 text-sm text-center text-muted-foreground">
+                                              No users found
+                                            </p>
+                                          )}
+                                        </CommandEmpty>
+                                        <CommandGroup heading="Users">
+                                        {searchResults?.map((user) => (
+                                            <CommandItem
+                                            key={user._id}
+                                            value={user._id}
+                                            onSelect={() => addMember(user)}
+                                            >
+                                            <div></div>
+                                            </CommandItem>
+                                        ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>                              
+                                 </PopoverContent> 
                             </Popover>
                         </div>
                     </div>
