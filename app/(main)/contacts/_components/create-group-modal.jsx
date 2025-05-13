@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useConvexQuery } from '@/hooks/use-convex-query';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, X } from 'lucide-react';
 import {
     Command,
     CommandEmpty,
@@ -56,6 +56,10 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
             description: "",
         },
     });
+
+    const removeMember = (userId) => {
+        setSelectedMembers(selectedMembers.filter((member) => member._id !== userId));
+    };
 
     const handleClose = () => {
         reset(); // Reset the form fields
@@ -130,7 +134,30 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                             </Badge>
                             )}
 
-                            
+                            {
+                                selectedMembers.map((member) => (
+                                    <Badge
+                                        key={member._id || member.email} // Ensure a unique key, fallback to member.email if _id is undefined
+                                        variant="secondary"
+                                        className="flex items-center px-3 py-1"
+                                    >
+                                        <Avatar className="h-5 w-5 mr-2">
+                                            <AvatarImage src={member.imageUrl} />
+                                            <AvatarFallback>
+                                                {member.name?.charAt(0) || "?"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span>{member.name}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeMember(member._id)}
+                                            className="ml-2 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </Badge>
+                                ))
+                            }
 
                             <Popover open={commandOpen} onOpenChange={setCommandOpen}>
                                 <PopoverTrigger asChild>
@@ -172,7 +199,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                                             {searchResults?.map((user) => (
                                                 <CommandItem
                                                     key={user._id || user.email} // Ensure a unique key, fallback to user.email if _id is undefined
-                                                    value={user.name|| user.email}
+                                                    value={user._id}
                                                     onSelect={() => addMember(user)}
                                                 >
                                                     <div className="flex items-center gap-2">
