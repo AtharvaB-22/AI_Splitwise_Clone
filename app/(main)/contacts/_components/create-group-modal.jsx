@@ -5,9 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { api } from '@/convex/_generated/api';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useConvexQuery } from '@/hooks/use-convex-query';
-import { query } from '@/convex/_generated/server';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
@@ -131,6 +130,8 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                             </Badge>
                             )}
 
+                            
+
                             <Popover open={commandOpen} onOpenChange={setCommandOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
@@ -168,15 +169,28 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                                           )}
                                         </CommandEmpty>
                                         <CommandGroup heading="Users">
-                                        {searchResults?.map((user) => (
-                                            <CommandItem
-                                            key={user._id}
-                                            value={user._id}
-                                            onSelect={() => addMember(user)}
-                                            >
-                                            <div></div>
-                                            </CommandItem>
-                                        ))}
+                                            {searchResults?.map((user) => (
+                                                <CommandItem
+                                                    key={user._id || user.email} // Ensure a unique key, fallback to user.email if _id is undefined
+                                                    value={user.name|| user.email}
+                                                    onSelect={() => addMember(user)}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <Avatar className="h-6 w-6">
+                                                            <AvatarImage src={user.imageUrl} />
+                                                            <AvatarFallback>
+                                                                {user.name?.charAt(0) || "?"}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm">{user.name}</span>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {user.email}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </CommandItem>
+                                            ))}
                                         </CommandGroup>
                                     </CommandList>
                                 </Command>                              
