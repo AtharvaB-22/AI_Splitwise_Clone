@@ -23,20 +23,20 @@ export const store = mutation({
       )
       .unique();
 
-    if (user !== null) {
-      // If we've seen this identity before but the name has changed, patch the value.
-      if (user.name !== identity.name) {
-        await ctx.db.patch(user._id, { name: identity.name });
+      if (user !== null) {
+        // If we've seen this identity before but the name has changed, patch the value.
+        if (user.name !== identity.name) {
+          await ctx.db.patch(user._id, { name: identity.name ?? "Anonymous" }); // Default to "Anonymous"
+        }
+        return user._id;
       }
-      return user._id;
-    }
-
-    return await ctx.db.insert("users", {
-      name: identity.name ?? "Anonymous",
-      tokenIdentifier: identity.tokenIdentifier,
-      email:identity.email,
-      imageUrl: identity.imageUrl,
-    });
+      
+      return await ctx.db.insert("users", {
+        name: identity.name ?? "Anonymous", // Default to "Anonymous" if name is missing
+        tokenIdentifier: identity.tokenIdentifier,
+        email: identity.email,
+        imageUrl: identity.imageUrl,
+      });
   },
 });
 
@@ -94,12 +94,20 @@ export const searchUsers = query({
             ),
         ];
 
-        return users.filter((user) => user._id !== currentUser._id)
+        return users
+        .filter((user) => user._id !== currentUser._id)
         .map((user) => ({
-            id: user._id,
-            name: user.name,
+            id: user._id, // Map `_id` to `id`
+            name: user.name ?? "Anonymous", // Default to "Anonymous" if name is missing
             email: user.email,
             imageUrl: user.imageUrl,
-        }));         
+        }));      
     },
 });
+
+export const users = v.object({
+    email: v.string(),
+    imageUrl: v.optional(v.string()),
+    name: v.optional(v.string()), // Make the name field optional
+    tokenIdentifier: v.string(),
+  });

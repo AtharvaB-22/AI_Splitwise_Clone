@@ -36,8 +36,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
     const { data: searchResults, isLoading: isSearching } =useConvexQuery(api.users.searchUsers,
         { query:searchQuery}
      );
-
-     const createGroup=useConvexMutation(api.contacts.createGroup,)
+     const createGroup=useConvexMutation(api.contacts.createGroup)
 
      const addMember = (user) => {
     
@@ -74,34 +73,30 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
     };
 
     const onSubmit = async (data) => {
-        // try {
-        //     // Filter out invalid members
-        //     const validMembers = selectedMembers.filter((member) => member._id);
-    
-        //     if (validMembers.length === 0) {
-        //         toast.error("Please add at least one valid member to the group.");
-        //         return;
-        //     }
-    
-        //     const memberIds = validMembers.map((member) => member._id);
-    
-        //     // Call the createGroup mutation
-        //     const groupId = await createGroup.mutate({
-        //         name: data.name,
-        //         description: data.description,
-        //         members: memberIds,
-        //     });
-    
-        //     toast.success("Group created successfully!");
-        //     handleClose();
-    
-        //     if (onSuccess) {
-        //         onSuccess(groupId);
-        //     }
-        // } catch (error) {
-        //     toast.error("Failed to create Group: " + error.message);
-        // }
-        console.log("Creating group with data:", data);
+        try{
+            // const memberIds = selectedMembers.map((member) => member._id);
+
+            const validMembers = selectedMembers.filter((member) => member._id);
+
+                if (validMembers.length === 0) {
+                toast.error("Please add at least one valid member to the group.");
+                return;
+                }
+
+            const memberIds = validMembers.map((member) => member._id);
+
+            const groupId = await createGroup.mutate({
+                name: data.name,
+                description: data.description,
+                members: memberIds,
+            });
+
+            toast.success("Group created successfully!");
+            handleClose(); // Close the modal after successful creation
+            if(onSuccess) onSuccess(groupId); // Call the onSuccess function if provided
+        } catch (error) {
+            toast.error("Failed to create group: "+ error.message);
+        }
     };
 
     return (
