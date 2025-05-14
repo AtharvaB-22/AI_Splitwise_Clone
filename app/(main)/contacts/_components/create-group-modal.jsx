@@ -36,17 +36,46 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
     const { data: searchResults, isLoading: isSearching } =useConvexQuery(api.users.searchUsers,
         { query:searchQuery}
      );
+
      const createGroup=useConvexMutation(api.contacts.createGroup)
 
-     const addMember = (user) => {
+    //  const addMember = (user) => {
+
+    //     if (!user._id) {
+    //         console.error("Invalid user object:", user);
+    //         toast.error("Invalid user selected. Please try again.");
+    //         return;
+    //     }
+
+    //     if (!selectedMembers.some((member) => member._id === user._id)) {
+    //         setSelectedMembers([...selectedMembers, user]);
+    //         toast.success(`${user.name || user.email} added to the group.`);
+    //     } else {
+    //         toast.error("This user is already added to the group.");
+    //     }
+    //     setCommandOpen(false);
+    //     console.log("Selected Members after adding:", selectedMembers);
+    // };
+
+    const addMember = (user) => {
+        // Map `id` to `_id` for consistency
+        const userWithId = { ...user, _id: user._id || user.id };
     
-        if (!selectedMembers.some((member) => member._id === user._id)) {
-            setSelectedMembers([...selectedMembers, user]);
-            toast.success(`${user.name || user.email} added to the group.`);
+        if (!userWithId._id) {
+            console.error("Invalid user object:", userWithId);
+            toast.error("Invalid user selected. Please try again.");
+            return;
+        }
+    
+        if (!selectedMembers.some((member) => member._id === userWithId._id)) {
+            setSelectedMembers((prevMembers) => [...prevMembers, userWithId]);
+            toast.success(`${userWithId.name || userWithId.email} added to the group.`);
         } else {
             toast.error("This user is already added to the group.");
         }
+    
         setCommandOpen(false);
+        console.log("Selected Members after adding:", selectedMembers);
     };
 
     const {
@@ -72,30 +101,60 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
         onClose(); // Call the onClose function passed as a prop
     };
 
+    // const onSubmit = async (data) => {
+    //     try{
+    //         const memberIds = selectedMembers.map((member) => member._id);
+
+    //         console.log("Valid Member IDs:", memberIds);
+
+    //         const groupId = await createGroup.mutate({
+    //             name: data.name,
+    //             description: data.description,
+    //             members: memberIds,
+    //         });
+
+    //         toast.success("Group created successfully!");
+    //         handleClose(); // Close the modal after successful creation
+    //         if(onSuccess) onSuccess(groupId); // Call the onSuccess function if provided
+    //     } catch (error) {
+    //         toast.error("Failed to create group: "+ error.message);
+    //     }
+    // };
+
     const onSubmit = async (data) => {
-        try{
-            // const memberIds = selectedMembers.map((member) => member._id);
-
+        try {
+            // Filter out invalid members
             const validMembers = selectedMembers.filter((member) => member._id);
-
-                if (validMembers.length === 0) {
+    
+            if (validMembers.length === 0) {
                 toast.error("Please add at least one valid member to the group.");
                 return;
-                }
-
-            const memberIds = validMembers.map((member) => member._id);
-
+            }
+    
+            console.log("Valid Members in onSubmit:", validMembers);
+    
+            // Map members to the required structure for the Convex schema
+            const members = validMembers.map((member) => ({
+                // userId: new Convex.Id("users", member._id), // Convert `_id` to a valid Convex ID
+                userId: member._id,
+                role: "member", // Default role
+                joinedAt: Date.now(), // Timestamp for when the user joined
+            }));
+    
+            console.log("Mapped Members:", members);
+    
+            // Call the createGroup mutation
             const groupId = await createGroup.mutate({
                 name: data.name,
                 description: data.description,
-                members: memberIds,
+                members,
             });
-
+    
             toast.success("Group created successfully!");
             handleClose(); // Close the modal after successful creation
-            if(onSuccess) onSuccess(groupId); // Call the onSuccess function if provided
+            if (onSuccess) onSuccess(groupId); // Call the onSuccess function if provided
         } catch (error) {
-            toast.error("Failed to create group: "+ error.message);
+            toast.error("Failed to create group: " + error.message);
         }
     };
 
@@ -152,7 +211,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
 
                             {selectedMembers.map((member) => (
                                 <Badge
-                                    key={member._id } 
+                                    key={member._id || member.email} 
                                     variant="secondary"
                                     className="flex items-center px-3 py-1"
                                 >
@@ -212,7 +271,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                                             <CommandGroup heading="Users">
                                                 {searchResults?.map((user) => (
                                                     <CommandItem
-                                                        key={user._id } // Ensure a unique key
+                                                        key={user._id || user.email} // Ensure a unique key
                                                         value={user.name + user.email}
                                                         onSelect={() => {
                                                             addMember(user); // Add the selected member
@@ -232,6 +291,7 @@ const CreateGroupModal = ({ isOpen, onClose, onSuccess }) => {
                                                                 </span>
                                                             </div>
                                                         </div>
+                                                        console.log("Search Results:", searchResults);
                                                     </CommandItem>
                                                 ))}
                                             </CommandGroup>
