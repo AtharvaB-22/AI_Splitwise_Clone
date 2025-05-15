@@ -174,3 +174,58 @@ export const getMonthlySpending = query({
     return result;
 },
 });
+
+export const getUserGroups = query({
+  handler: async (ctx) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+
+    // Get all groups from the database
+    const allGroups = await ctx.db.query("groups").collect();
+
+    // Filter to only include groups where the user is a member
+    const groups = allGroups.filter((group) =>
+      group.members.some((member) => member.userId === user._id)
+    );
+
+    const enhancedGroups = await Promise.all(
+      groups.map(async (group) => {
+        
+        const expenses = await ctx.db
+          .query("expenses")
+          .withIndex("by_group",(q) => q.eq(q.field("groupId"), group._id))
+          .collect();
+
+          let balance = 0;
+          expenses.forEach((expense) => {
+            if(expense.paidByUserId === user._id) {
+              expense.splits.forEach((split) => {
+                if(split.userId !== user._id && !split.paid) {
+                  balance += split.amount;
+                }
+              });
+            } else{
+                const userSplit = expense.splits.find(
+                    (split) => split.userId === user._id
+                );
+                if (userSplit && !userSplit.paid) {
+                    balance -= userSplit.amount;
+                }
+            }
+          });
+
+          const settlements = await ctx.db
+            .query("settlements")
+            .filter((q) =>
+                q.and(
+                q.eq(q.field("groupId"), group._id),
+                q.or(
+                    q.eq(q.field("paidByUserId"), user._id),
+                    q.eq(q.field("receivedByUserId"), user._id)
+                )
+                )
+            )
+            .collect();
+    })
+    );
+  },
+});
