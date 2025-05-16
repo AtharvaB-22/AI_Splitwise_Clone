@@ -14,9 +14,20 @@ const ContactsPage = () => {
   const { data, isLoading } = useConvexQuery(api.contacts.getAllContacts);
 
   const router=useRouter();
+  const searchParams = useSearchParams();
 
-  // Log the data to verify its structure
-  console.log("Contacts Data:", JSON.stringify(data, null, 2));
+  useEffect(() => {
+    const createGroupParam = searchParams.get("createGroup");
+
+    if (createGroupParam === "true") {
+      setIsCreateGroupModalOpen(true);
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("createGroup");
+
+      router.replace(url.pathname + url.search);
+    }
+  }, [searchParams, router]);
 
   if (isLoading) {
     return (

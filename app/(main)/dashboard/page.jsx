@@ -1,14 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import { useConvexQuery } from "@/hooks/use-convex-query";
 import CardContent from "@geist-ui/react/esm/card/card-content";
-import { PlusCircle } from "lucide-react";
+import { ChevronRight, PlusCircle, Users } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { BarLoader } from "react-spinners";
+import ExpenseSummary from "./components/expense-summary";
+import BalanceSummary from "./components/balance-summary";
+import GroupList from "./components/group-list";
 
 const DashboardPage = () => {
     const {data: balances, isLoading: balancesLoading} = useConvexQuery(
@@ -128,6 +131,56 @@ const DashboardPage = () => {
                     )}
                 </CardContent>
             </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
+            <div className="lg:col-span-2 space-y-6">
+                    {/* Expense Summary */}
+                <ExpenseSummary
+                monthlySpending={monthlySpending}
+                totalSpent={totalSpent}
+                />
+            </div>
+            <div className="space-y-6">
+                    {/* Balance Details */}
+                <Card>
+                <CardHeader className="pb-3 flex items-center justify-between">
+                    <CardTitle>Balance Details</CardTitle>
+                    <Button variant="link" asChild className="p-0">
+                    <Link href="/contacts">
+                        View all
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                    </Link>
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <BalanceSummary balances={balances} />
+                </CardContent>
+                </Card>
+                    {/* Groups */}
+                <Card>
+                <CardHeader className="pb-3 flex items-center justify-between">
+                    <CardTitle>Your Groups</CardTitle>
+                    <Button variant="link" asChild className="p-0">
+                    <Link href="/contacts">
+                        View all
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                    </Link>
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <GroupList groups={groups} />
+                </CardContent>
+                <CardFooter>
+                    <Button variant="outline" asChild className="w-full">
+                        <Link href="/contacts?createGroup=true">
+                            <Users className="mr-2 h-4 w-4" />
+                            Create New Group
+                        </Link>
+                    </Button>
+                </CardFooter>
+                </Card>
+            </div>
         </div>
     </>
       )}
