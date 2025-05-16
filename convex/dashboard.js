@@ -3,95 +3,84 @@ import { query } from "./_generated/server";
 
 // Get user balances
 export const getUserBalances = query({
-    handler: async (ctx) => {
+  handler: async (ctx) => {
+    // Use the existing getCurrentUser function instead of repeating auth logic
     const user = await ctx.runQuery(internal.users.getCurrentUser);
 
-    /* --- 1-to-1 expenses (no groupId) --- */
-    // Filter expenses to only include one-on-one expenses (not group expenses)
-    // where the current user is either the payer or in the splits
+    /* ───────────── 1‑to‑1 expenses (no groupId) ───────────── */
     const expenses = (await ctx.db.query("expenses").collect()).filter(
-    (e) =>
-    !e.groupId && // 1-to-1 only
-    (e.paidByUserId === user._id ||
-    e.splits.some((s) => s.userId === user._id))
+      (e) =>
+        !e.groupId && // 1‑to‑1 only
+        (e.paidByUserId === user._id ||
+          e.splits.some((s) => s.userId === user._id))
     );
 
-    let youOwe=0;
-    let youAreOwed=0;
-    const balanceByUsers={};
+    /* tallies */
+    let youOwe = 0;
+    let youAreOwed = 0;
+    const balanceByUser = {};
 
-    for(const e of expenses) {
-    const isPayer = e.paidByUserId === user._id;
-    const mySplit = e.splits.find((s) => s.userId === user._id);
+    for (const e of expenses) {
+      const isPayer = e.paidByUserId === user._id;
+      const mySplit = e.splits.find((s) => s.userId === user._id);
 
-    if (isPayer) {
+      if (isPayer) {
         for (const s of e.splits) {
-        // Skip user's own split or already paid splits
-        if (s.userId === user._id || s.paid) continue;
-
-        // Add to amount owed to the user
-        youAreOwed += s.amount;
-
-        (balanceByUsers[s.userId] ??= { owed: 0, owing: 0 }).owed += s.amount;
+          if (s.userId === user._id || s.paid) continue;
+          youAreOwed += s.amount;
+          (balanceByUser[s.userId] ??= { owed: 0, owing: 0 }).owed += s.amount;
         }
-    }
-    else if (mySplit && !mySplit.paid) {
-        // Add to amount owed to the user
+      } else if (mySplit && !mySplit.paid) {
         youOwe += mySplit.amount;
-
-        (balanceByUsers[e.paidByUserId] ??= { owed: 0, owing: 0 }).owing += mySplit.amount;
+        (balanceByUser[e.paidByUserId] ??= { owed: 0, owing: 0 }).owing +=
+          mySplit.amount;
+      }
     }
-    }
 
-    const settlements = ( await ctx.db.query("settlements").collect()).filter(
-    (s) =>
-        !s.groupId && // 1-to-1 only
-        (s.payerUserId === user._id || s.receivedByUserId === user._id)
+    /* ───────────── 1‑to‑1 settlements (no groupId) ───────────── */
+    const settlements = (await ctx.db.query("settlements").collect()).filter(
+      (s) =>
+        !s.groupId &&
+        (s.paidByUserId === user._id || s.receivedByUserId === user._id)
     );
 
     for (const s of settlements) {
-        if (s.paidByUserId === user._id) {
-            // User paid someone else -> reduces what user owes
-            youOwe -= s.amount;
-            (balanceByUsers[s.receivedByUserId] ??= { owed: 0, owing: 0 }).owing -= s.amount;
-        } else {
-            // Someone paid the user -> reduces what they owe the user
-            youAreOwed -= s.amount;
-            (balanceByUsers[s.paidByUserId] ??= { owed: 0, owing: 0 }).owed -= s.amount;
-        }
+      if (s.paidByUserId === user._id) {
+        youOwe -= s.amount;
+        (balanceByUser[s.receivedByUserId] ??= { owed: 0, owing: 0 }).owing -=
+          s.amount;
+      } else {
+        youAreOwed -= s.amount;
+        (balanceByUser[s.paidByUserId] ??= { owed: 0, owing: 0 }).owed -=
+          s.amount;
+      }
     }
 
-    const youOweList=[];
-    const youAreOwedByList=[];
-    for (const [uid, {owed,owing}] of Object.entries(balanceByUsers)) {
-        const net=owed- owing;
-        if(net ===0) continue; // Skip if no net balance
-
-        const counterpart = await ctx.db.get(uid);
-        const base = {
+    /* build lists for UI */
+    const youOweList = [];
+    const youAreOwedByList = [];
+    for (const [uid, { owed, owing }] of Object.entries(balanceByUser)) {
+      const net = owed - owing;
+      if (net === 0) continue;
+      const counterpart = await ctx.db.get(uid);
+      const base = {
         userId: uid,
         name: counterpart?.name ?? "Unknown",
         imageUrl: counterpart?.imageUrl,
         amount: Math.abs(net),
-        };
-    
-
-        net > 0 ? youAreOwedByList.push(base) : youOweList.push(base);
+      };
+      net > 0 ? youAreOwedByList.push(base) : youOweList.push(base);
     }
-        // Sort the lists by amount in descending order
 
-        youOweList.sort((a, b) => b.amount - a.amount);
-        youAreOwedByList.sort((a, b) => b.amount - a.amount);
+    youOweList.sort((a, b) => b.amount - a.amount);
+    youAreOwedByList.sort((a, b) => b.amount - a.amount);
 
-        return{
-            youOwe,
-            youAreOwed,
-            totalbalance: youAreOwed-youOwe,
-            ownDetails:{
-                youOwe: youOweList,
-                youAreOwedBy: youAreOwedByList,
-            },
-        };
+    return {
+      youOwe,
+      youAreOwed,
+      totalBalance: youAreOwed - youOwe,
+      oweDetails: { youOwe: youOweList, youAreOwedBy: youAreOwedByList },
+    };
   },
 });
 
