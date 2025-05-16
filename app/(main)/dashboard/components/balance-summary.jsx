@@ -1,13 +1,83 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 const BalanceSummary = ({ balances }) => {
+    if (!balances) {
+        return <div>No balance data available.</div>;
+    }
+
+    const { oweDetails } = balances;
+
+    const hasOwed = oweDetails.youAreOwedBy?.length > 0;
+    const hasOwing = oweDetails.youOwe?.length > 0;
+
   return (
-    <div>
-      {/* Render balance summary here */}
-      <h2 className="text-xl font-bold mb-2">Balance Summary</h2>
-      <div>Total Balance: {balances?.totalBalance ?? 0}</div>
-      <div>You are owed: {balances?.youAreOwed ?? 0}</div>
-      <div>You owe: {balances?.youOwe ?? 0}</div>
+    <div className="space-y-4">
+    {!hasOwed && !hasOwing && (
+        <div className="text-center py-6">
+        <p className="text-muted-foreground">You're all settled up!</p>
+        </div>
+    )}
+    
+    {hasOwed && (
+        <div>
+        <h3 className="flex items-center text-sm font-medium mb-3">
+            <ArrowUpCircle className="h-4 w-4 text-green-500 mr-2" />
+            Owed to You
+        </h3>
+        <div className="space-y-3">
+            {oweDetails.youAreOwedBy.map((item) => (
+            <Link 
+            key={item.userId} 
+            href={`/person/${item.userId}`}
+            className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors"
+            >
+                {/* Add your content here */}
+                <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8"  >
+                        <AvatarImage src={item.userImage} />
+                        <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium ">{item.name}</span>
+                </div>
+
+                <span className="font-medium text-green-600 ">Rs {item.amount.toFixed(2)}</span>
+            </Link>
+            ))}
+        </div>
+        </div>
+    )}
+
+    {hasOwing && (
+        <div>
+        <h3 className="flex items-center text-sm font-medium mb-3">
+            <ArrowDownCircle className="h-4 w-4 text-red-500 mr-2" />
+            You Owe
+        </h3>
+        <div className="space-y-3">
+            {oweDetails.youOwe.map((item) => (
+            <Link 
+            key={item.userId} 
+            href={`/person/${item.userId}`}
+            className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors"
+            >
+                {/* Add your content here */}
+                <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8"  >
+                        <AvatarImage src={item.userImage} />
+                        <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium ">{item.name}</span>
+                </div>
+
+                <span className="font-medium text-green-600 ">Rs {item.amount.toFixed(2)}</span>
+            </Link>
+            ))}
+        </div>
+        </div>
+    )}
     </div>
   );
 };

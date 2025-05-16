@@ -37,7 +37,7 @@ const DashboardPage = () => {
         monthlySpendingLoading;
 
     return (
-    <div>
+    <div className="container mx-auto py-6 space-y-6">
       {isLoading ? (
         <div className="w-full py-12 flex justify-center">
           <BarLoader width={"130%"} color="#356070" />
