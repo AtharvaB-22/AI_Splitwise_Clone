@@ -21,25 +21,25 @@ export const getUserBalances = query({
     const balanceByUsers={};
 
     for(const e of expenses) {
-    const isPayer = e.paidByUserId === user__id;
-    const mySplit = e.splits.find((s) => s.userId === user__id);
+    const isPayer = e.paidByUserId === user._id;
+    const mySplit = e.splits.find((s) => s.userId === user._id);
 
     if (isPayer) {
         for (const s of e.splits) {
         // Skip user's own split or already paid splits
-        if (s.userId === user__id || s.paid) continue;
+        if (s.userId === user._id || s.paid) continue;
 
         // Add to amount owed to the user
         youAreOwed += s.amount;
 
-        (balanceByUser[s.userId] ??= { owed: 0, owing: 0 }).owed += s.amount;
+        (balanceByUsers[s.userId] ??= { owed: 0, owing: 0 }).owed += s.amount;
         }
     }
     else if (mySplit && !mySplit.paid) {
         // Add to amount owed to the user
         youOwe += mySplit.amount;
 
-        (balanceByUser[e.paidByUserId] ??= { owed: 0, owing: 0 }).owing += mySplit.amount;
+        (balanceByUsers[e.paidByUserId] ??= { owed: 0, owing: 0 }).owing += mySplit.amount;
     }
     }
 
@@ -53,17 +53,17 @@ export const getUserBalances = query({
         if (s.paidByUserId === user._id) {
             // User paid someone else -> reduces what user owes
             youOwe -= s.amount;
-            (balanceByUser[s.receivedByUserId] ??= { owed: 0, owing: 0 }).owing -= s.amount;
+            (balanceByUsers[s.receivedByUserId] ??= { owed: 0, owing: 0 }).owing -= s.amount;
         } else {
             // Someone paid the user -> reduces what they owe the user
             youAreOwed -= s.amount;
-            (balanceByUser[s.paidByUserId] ??= { owed: 0, owing: 0 }).owed -= s.amount;
+            (balanceByUsers[s.paidByUserId] ??= { owed: 0, owing: 0 }).owed -= s.amount;
         }
     }
 
     const youOweList=[];
     const youAreOwedByList=[];
-    for (const [uid, {owed,owing}] of Object.entries(balanceByUser)) {
+    for (const [uid, {owed,owing}] of Object.entries(balanceByUsers)) {
         const net=owed- owing;
         if(net ===0) continue; // Skip if no net balance
 
@@ -102,7 +102,9 @@ export const getTotalSpent = query({
     const startOfYear = new Date(currentYear, 0, 1).getTime();
     const expenses = await ctx.db
     .query("expenses")
-    .withIndex("by_date", (q) => q.get("date", startOfYear));
+    .withIndex("by_date")
+    .filter(expense => expense.date >= startOfYear)
+    .collect();
     // Filter expenses to only include those where the user is involved
     const userExpenses = expenses.filter(
     (expense) =>
@@ -166,9 +168,13 @@ export const getMonthlySpending = query({
     });
 
      const result = Object.entries(monthlyTotals).map(([month, total]) => ({
-        month: new Date(parseInt(month)),
-        total,
-    }));
+      month: Number(month), // timestamp in ms
+      total,
+  }));
+    // Convert timestamps to month numbers (0-11)
+    result.forEach((item) => {
+      item.month = new Date(item.month).getMonth();
+    });
 
     result.sort((a, b) => a.month - b.month); // Sort by month
     return result;
@@ -178,6 +184,9 @@ export const getMonthlySpending = query({
 export const getUserGroups = query({
   handler: async (ctx) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+
+    const currentYear = new Date().getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1).getTime();
 
     // Get all groups from the database
     const allGroups = await ctx.db.query("groups").collect();
@@ -190,10 +199,16 @@ export const getUserGroups = query({
     const enhancedGroups = await Promise.all(
       groups.map(async (group) => {
         
+        // const expenses = await ctx.db
+        //   .query("expenses")
+        //   .withIndex("by_group",(q) => q.eq(q.field("groupId"), group._id))
+        //   .collect();
+
         const expenses = await ctx.db
-          .query("expenses")
-          .withIndex("by_group",(q) => q.eq(q.field("groupId"), group._id))
-          .collect();
+        .query("expenses")
+        .withIndex("by_date")
+        .filter(expense => expense.date >= startOfYear)
+        .collect();
 
           let balance = 0;
           expenses.forEach((expense) => {
@@ -213,19 +228,47 @@ export const getUserGroups = query({
             }
           });
 
+          // const settlements = await ctx.db
+          //   .query("settlements")
+          //   .filter((q) =>
+          //       q.and(
+          //       q.eq(q.field("groupId"), group._id),
+          //       q.or(
+          //           q.eq(q.field("paidByUserId"), user._id),
+          //           q.eq(q.field("receivedByUserId"), user._id)
+          //       )
+          //       )
+          //   )
+          //   .collect();
+
           const settlements = await ctx.db
-            .query("settlements")
-            .filter((q) =>
-                q.and(
-                q.eq(q.field("groupId"), group._id),
-                q.or(
-                    q.eq(q.field("paidByUserId"), user._id),
-                    q.eq(q.field("receivedByUserId"), user._id)
-                )
-                )
-            )
-            .collect();
+          .query("settlements")
+          .filter(
+            (settlement) =>
+              settlement.groupId === group._id &&
+              (settlement.paidByUserId === user._id ||
+                settlement.receivedByUserId === user._id)
+          )
+          .collect();
+
+            settlements.forEach((settlement) => {
+              // Process each settlement
+              if (settlement.paidByUserId === user._id) {
+                // User paid someone else -> reduces what user owes
+                balance += settlement.amount;
+              } else {
+                // Someone paid the user -> reduces what they owe the user
+                balance -= settlement.amount;
+              }
+            });
+            return {
+              ...group,
+              id: group._id,
+              balance,
+            };
     })
     );
+
+     return enhancedGroups
   },
 });
