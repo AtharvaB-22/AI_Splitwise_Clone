@@ -12,6 +12,8 @@ const ExpenseSummary = ({ monthlySpending = [], totalSpent = 0 }) => {
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 
+  const yearlyTotal = monthlySpending.reduce((sum, m) => sum + (m.total || 0), 0);
+
   // Prepare chart data for each month
   const chartData = monthlySpending.map((item, idx) => ({
   month: monthNames[idx],
@@ -27,14 +29,14 @@ const ExpenseSummary = ({ monthlySpending = [], totalSpent = 0 }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-white shadow rounded-xl p-6 flex flex-col justify-center items-start">
             <p className="text-base text-muted-foreground font-medium mb-1">Total this month</p>
-            <h3 className="text-3xl font-extrabold text-green-600 tracking-tight">
+            <h3 className="text-3xl font-semibold text-neutral-700">
             Rs {monthlySpending?.[currentMonth]?.total?.toFixed(2) || "0.00"}
             </h3>
         </div>
         <div className="bg-white shadow rounded-xl p-6 flex flex-col justify-center items-start">
             <p className="text-base text-muted-foreground font-medium mb-1">Total this year</p>
-            <h3 className="text-3xl font-extrabold text-green-600 tracking-tight">
-            Rs {totalSpent?.toFixed(2) || "0.00"}
+            <h3 className="text-3xl font-semibold text-neutral-700">
+            Rs {yearlyTotal.toFixed(2)}
             </h3>
         </div>
         </div>
