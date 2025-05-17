@@ -1,6 +1,7 @@
 
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 export const getGroupExpenses = query({
   args: { groupId: v.id("groups") },
@@ -159,4 +160,58 @@ export const getGroupExpenses = query({
         userLookupMap // Quick Lookup for user details 
     }
   },
+});
+
+export const deleteExpense = mutation({
+  args: {
+    expenseId: v.id("expenses"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+
+    const expense = await ctx.db.get(args.expenseId);
+    if (!expense) {
+      throw new Error("Expense not found");
+    }
+
+    // Check if user is authorized to delete this expense
+    // Only the creator of the expense or the payer can delete it
+    if (expense.createdBy !== user._id && expense.paidByUserId !== user._id) {
+      throw new Error("You don't have permission to delete this expense");
+    }
+
+    await ctx.db.delete(args.expenseId);
+
+    return {
+      success: true,
+      message: "Expense deleted successfully",
+    };
+
+  }
+});
+
+export const deleteGroup = mutation({
+  args: {
+    groupId: v.id("groups"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const group = await ctx.db.get(args.groupId);
+
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    // Only the group creator (admin) can delete the group
+    if (group.createdBy !== user._id) {
+      throw new Error("You don't have permission to delete this group");
+    }
+
+    await ctx.db.delete(args.groupId);
+
+    return {
+      success: true,
+      message: "Group deleted successfully",
+    };
+  }
 });
