@@ -73,11 +73,13 @@ export default function GroupExpensesPage() {
                 Settle up
               </Link>
             </Button>
-            <Button asChild>
-              <Link href={`/expenses/new`}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add expense
-              </Link>
+            <Button
+            asChild={false}
+            onClick={() => window.location.href = "/expenses/new"}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md"
+            >
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Add Expense
             </Button>
           </div>
         </div>

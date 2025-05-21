@@ -81,7 +81,7 @@ const DashboardPage = () => {
                             </span>
                         )}
                       </div>
-                      <p>
+                      <p className="text-xs text-muted-foreground mt-1">
                         {balances?.totalBalance> 0 ? "You are to recieve money"
                         : balances?.totalBalance<0 ? "You owe money": 
                         "You are settled up!"}
@@ -112,10 +112,10 @@ const DashboardPage = () => {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {balances?.oweDetails?.youOwe?.length > 0 ? (
+                    {balances?.oweDetails?.youOwe?.length > 0 && balances?.youOwe < 0 ? (
                     <>
                         <div className="text-2xl font-bold text-red-600">
-                        Rs {balances?.youOwe?.toFixed(2)}
+                        Rs {Math.abs(balances?.youOwe).toFixed(2)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                         To {balances?.oweDetails?.youOwe?.length || 0} people
@@ -123,14 +123,16 @@ const DashboardPage = () => {
                     </>
                     ) : (
                     <>
-                        <div className="text-2xl font-bold">Rs 0.00</div>
+                        <div className="text-2xl font-bold text-gray-600">
+                        Rs 0.00
+                        </div>
                         <p className="text-xs text-muted-foreground mt-1">
                         You don't owe anyone
                         </p>
                     </>
                     )}
                 </CardContent>
-            </Card>
+                </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">

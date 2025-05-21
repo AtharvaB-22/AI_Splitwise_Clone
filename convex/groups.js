@@ -133,13 +133,14 @@ export const getGroupExpenses = query({
     // Create a comprehensive balance object for each member
     const balances = memberDetails.map((m) => ({
         ...m,
+        id: m._id, // <-- add this line
         totalBalance: totals[m._id],
         owes: Object.entries(ledger[m._id])
-        .filter(([,v]) => v > 0)
-        .map(([to, amount]) => ({ to, amount })),
-        owedBy:ids
-        .filter((other) => ledger[other][m._id] > 0)
-        .map((other) => ({ from: other, amount: ledger[other][m._id] })),
+          .filter(([,v]) => v > 0)
+          .map(([to, amount]) => ({ to, amount })),
+        owedBy: ids
+          .filter((other) => ledger[other][m._id] > 0)
+          .map((other) => ({ from: other, amount: ledger[other][m._id] })),
     }));
 
     const userLookupMap ={};

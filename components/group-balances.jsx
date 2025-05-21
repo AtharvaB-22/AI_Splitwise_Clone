@@ -40,6 +40,23 @@ export function GroupBalances({ balances }) {
 
   const userMap = Object.fromEntries(balances.map((b) => [b.id, b]));
 
+  const netBalances = {};
+balances.forEach((b) => {
+  if (b.id === me.id) return;
+  // Amount they owe me
+  const owedToMe = me.owedBy.find((x) => x.from === b.id)?.amount || 0;
+  // Amount I owe them
+  const iOwe = me.owes.find((x) => x.to === b.id)?.amount || 0;
+  // Net: positive means they owe me, negative means I owe them
+  const net = owedToMe - iOwe;
+  if (net !== 0) {
+    netBalances[b.id] = net;
+  }
+});
+const netMembers = Object.entries(netBalances)
+  .map(([id, amount]) => ({ ...userMap[id], amount }))
+  .sort((a, b) => b.amount - a.amount);
+
   // Who owes me?
   const owedByMembers = me.owedBy
     .map(({ from, amount }) => ({ ...userMap[from], amount }))
@@ -58,102 +75,69 @@ export function GroupBalances({ balances }) {
   /* ───── UI ────────────────────────────────────────────────────────────── */
   return (
     <div className="space-y-4">
-      {/* Current user's total balance */}
-      <div className="text-center pb-4 border-b">
-        <p className="text-sm text-muted-foreground mb-1">Your balance</p>
-        <p
-          className={`text-2xl font-bold ${
-            me.totalBalance > 0
-              ? "text-green-600"
-              : me.totalBalance < 0
-                ? "text-red-600"
-                : ""
-          }`}
-        >
-          {me.totalBalance > 0
-            ? `+$${me.totalBalance.toFixed(2)}`
-            : me.totalBalance < 0
-              ? `-$${Math.abs(me.totalBalance).toFixed(2)}`
-              : "$0.00"}
-        </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          {me.totalBalance > 0
-            ? "You are owed money"
-            : me.totalBalance < 0
-              ? "You owe money"
-              : "You are all settled up"}
-        </p>
-      </div>
-
-      {isAllSettledUp ? (
-        <div className="text-center py-4">
-          <p className="text-muted-foreground">Everyone is settled up!</p>
+        {/* Current user's total balance */}
+        <div className="text-center pb-4 border-b">
+            <p className="text-sm text-muted-foreground mb-1">Your balance</p>
+            <p
+            className={`text-2xl font-bold ${
+                me.totalBalance > 0
+                ? "text-green-600"
+                : me.totalBalance < 0
+                    ? "text-red-600"
+                    : ""
+            }`}
+            >
+            {me.totalBalance > 0
+                ? `+Rs ${me.totalBalance.toFixed(2)}`
+                : me.totalBalance < 0
+                ? `-Rs ${Math.abs(me.totalBalance).toFixed(2)}`
+                : "Rs 0.00"}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+            {me.totalBalance > 0
+                ? "You are owed money"
+                : me.totalBalance < 0
+                ? "You owe money"
+                : "You are all settled up"}
+            </p>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {/* People who owe the current user */}
-          {owedByMembers.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium flex items-center mb-3">
-                <ArrowUpCircle className="h-4 w-4 text-green-500 mr-2" />
-                Owed to you
-              </h3>
-              <div className="space-y-3">
-                {owedByMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={member.imageUrl} />
-                        <AvatarFallback>
-                          {member.name?.charAt(0) ?? "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm">{member.name}</span>
-                    </div>
-                    <span className="font-medium text-green-600">
-                      ${member.amount.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* People the current user owes */}
-          {owingToMembers.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium flex items-center mb-3">
-                <ArrowDownCircle className="h-4 w-4 text-red-500 mr-2" />
-                You owe
-              </h3>
-              <div className="space-y-3">
-                {owingToMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={member.imageUrl} />
-                        <AvatarFallback>
-                          {member.name?.charAt(0) ?? "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm">{member.name}</span>
-                    </div>
-                    <span className="font-medium text-red-600">
-                      ${member.amount.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+        {netMembers.length === 0 ? (
+            <div className="text-center py-4">
+            <p className="text-muted-foreground">Everyone is settled up!</p>
             </div>
-          )}
+        ) : (
+            <div className="space-y-3">
+            {netMembers.map((member) => (
+            <div
+                key={member.id}
+                className="flex items-center justify-between"
+            >
+                <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                    <AvatarImage src={member.imageUrl} />
+                    <AvatarFallback>
+                    {member.name?.charAt(0) ?? "?"}
+                    </AvatarFallback>
+                </Avatar>
+                <span className="text-sm">{member.name}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                <span className={`font-medium ${member.amount > 0 ? "text-green-600" : "text-red-600"}`}>
+                    {member.amount > 0
+                    ? `Rs ${member.amount.toFixed(2)}`
+                    : `Rs ${Math.abs(member.amount).toFixed(2)}`}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                    {member.amount > 0
+                    ? `${member.name} has to pay you`
+                    : `You have to pay ${member.name}`}
+                </span>
+                </div>
+            </div>
+            ))}
+            </div>
+        )}
         </div>
-      )}
-    </div>
   );
 }

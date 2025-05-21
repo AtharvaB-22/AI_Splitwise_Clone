@@ -135,29 +135,28 @@ const ExpenseList = ({
               </div>
             </div>
 
-            <div className="mt-3 flex text-sm gap-2 flex-wrap">
-              {expense.splits.map((split,idx) => {
-                const splitUser = getUserDetails(split.userId,expense);
+            <div className="mt-4 flex flex-wrap gap-3">
+              {expense.splits.map((split, idx) => {
+                const splitUser = getUserDetails(split.userId, expense);
                 const isCurrentUser = split.userId === currentUser?._id;
-                
+
                 return (
                   <Badge
                     key={idx}
                     variant={split.paid ? "outline" : "secondary"}
-                    className="flex items-center gap-1 px-2 py-1 rounded-full"
+                    className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 shadow-sm"
                   >
-                    <Avatar className="h-4 w-4">
-                      <AvatarFallback>
+                    <Avatar className="h-5 w-5 bg-muted">
+                      <AvatarFallback className="text-xs font-semibold">
                         {splitUser.name?.charAt(0) || "?"}
                       </AvatarFallback>
                     </Avatar>
-                    <span>
+                    <span className="text-xs font-medium">
                       {isCurrentUser ? "You" : splitUser.name}: Rs {split.amount.toFixed(2)}
                     </span>
                   </Badge>
                 );
               })}
-
             </div>
           </CardContent>
         </Card>
