@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardContent } from "./ui/card";
 import { ArrowLeftRight } from "lucide-react";
 import { format } from "date-fns";
+import { Badge } from "./ui/badge";
 
 const SettlementsList = ({
   settlements,
