@@ -19,6 +19,8 @@ import { z } from "zod";
 import { CategorySelector } from "./category-selector";
 import { GroupSelector } from "./group-selector";
 import { ParticipantSelector } from "./participant-selector";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SplitSelector } from "./split-selector";
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -234,8 +236,67 @@ const ExpenseForm = ({ type, onSuccess }) => {
           )}
         </div>
 
-
+           {/* Split type */}
+        <div className="space-y-2">
+          <Label>Split type</Label>
+          <Tabs
+            defaultValue="equal"
+            onValueChange={(value) => setValue("splitType", value)}
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="equal">Equal</TabsTrigger>
+              <TabsTrigger value="percentage">Percentage</TabsTrigger>
+              <TabsTrigger value="exact">Exact Amounts</TabsTrigger>
+            </TabsList>
+            <TabsContent value="equal" className="pt-4">
+              <p className="text-sm text-muted-foreground">
+                Split equally among all participants
+              </p>
+              <SplitSelector
+                type="equal"
+                amount={parseFloat(amountValue) || 0}
+                participants={participants}
+                paidByUserId={paidByUserId}
+                onSplitsChange={setSplits} // Use setSplits directly
+              />
+            </TabsContent>
+            <TabsContent value="percentage" className="pt-4">
+              <p className="text-sm text-muted-foreground">
+                Split by percentage
+              </p>
+              <SplitSelector
+                type="percentage"
+                amount={parseFloat(amountValue) || 0}
+                participants={participants}
+                paidByUserId={paidByUserId}
+                onSplitsChange={setSplits} // Use setSplits directly
+              />
+            </TabsContent>
+            <TabsContent value="exact" className="pt-4">
+              <p className="text-sm text-muted-foreground">
+                Enter exact amounts
+              </p>
+              <SplitSelector
+                type="exact"
+                amount={parseFloat(amountValue) || 0}
+                participants={participants}
+                paidByUserId={paidByUserId}
+                onSplitsChange={setSplits} // Use setSplits directly
+              />
+            </TabsContent>
+          </Tabs>
         </div>
+        </div>
+
+        <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isSubmitting || participants.length <= 1}
+          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md"
+        >
+          {isSubmitting ? "Creating..." : "Create Expense"}
+        </Button>
+      </div>
     </form>
   );
 };
