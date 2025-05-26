@@ -16,6 +16,7 @@ import { CalendarIcon } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { CategorySelector } from "./category-selector";
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -110,16 +111,15 @@ const ExpenseForm = ({ type, onSuccess }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            Category selector Component
 
-            {/* <CategorySelector
+            <CategorySelector
               categories={categories || []}
               onChange={(categoryId) => {
                 if (categoryId) {
                   setValue("category", categoryId);
                 }
               }}
-            /> */}
+            />
           </div>
            <div className="space-y-2">
             <Label>Date</Label>
@@ -155,7 +155,7 @@ const ExpenseForm = ({ type, onSuccess }) => {
           </div>
           </div>
 
-          
+
         </div>
     </form>
   );
