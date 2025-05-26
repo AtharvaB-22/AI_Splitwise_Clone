@@ -1,68 +1,162 @@
-import React, { useState } from "react";
+// Example Zod schema and component boilerplate for expense form validation
+"use client";
 
-const ExpenseForm = ({ onSubmit, initialValues = {} }) => {
-  const [description, setDescription] = useState(initialValues.description || "");
-  const [amount, setAmount] = useState(initialValues.amount || "");
-  const [date, setDate] = useState(initialValues.date || "");
-  const [category, setCategory] = useState(initialValues.category || "");
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { api } from "@/convex/_generated/api";
+import { useConvexMutation, useConvexQuery } from "@/hooks/use-convex-query";
+import { getAllCategories } from "@/lib/expense-categories";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!description || !amount || !date) return;
-    onSubmit({
-      description,
-      amount: parseFloat(amount),
-      date,
-      category,
-    });
-  };
+const expenseSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: "Amount must be a positive number",
+    }),
+  category: z.string().optional(),
+  date: z.date(),
+  paidByUserId: z.string().min(1, "Payer is required"),
+  splitType: z.enum(["equal", "percentage", "exact"]),
+  groupId: z.string().optional(),
+});
 
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md">
-      <div>
-        <label className="block mb-1 font-medium">Description</label>
-        <input
-          type="text"
-          className="input input-bordered w-full"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label className="block mb-1 font-medium">Amount</label>
-        <input
-          type="number"
-          className="input input-bordered w-full"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-          min="0"
-          step="0.01"
-        />
-      </div>
-      <div>
-        <label className="block mb-1 font-medium">Date</label>
-        <input
-          type="date"
-          className="input input-bordered w-full"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label className="block mb-1 font-medium">Category</label>
-        <input
-          type="text"
-          className="input input-bordered w-full"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
-      </div>
-      <button type="submit" className="btn btn-primary w-full">
-        Save Expense
-      </button>
+const ExpenseForm = ({ type, onSuccess }) => {
+    const [participants, setParticipants] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedGroup, setSelectedGroup] = useState(null);
+    const [splits, setSplits] = useState([]);
+        
+    const { data: currentUser } = useConvexQuery(api.users.getCurrentUser);
+
+    const createExpense = useConvexMutation(api.expenses.createExpense);
+    const categories = getAllCategories();
+
+    const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+    }  = useForm({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      description: "",
+      amount: "",
+      category: "",
+      date: new Date(),
+      paidByUserId: currentUser?._id || "",
+      splitType: "equal",
+      groupId: undefined,
+    },
+  });
+
+  const amountValue = watch("amount");
+  const paidByUserId = watch("paidByUserId");
+
+  const onSubmit = async(data) => {};
+
+  if(!currentUser) return null;
+
+  // ...rest of your component...
+   return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-4">
+        {/* Description and amount */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              placeholder="Lunch, movie tickets, etc."
+              {...register("description")}
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              id="amount"
+              placeholder="0.00"
+              type="number"
+              step="0.01"
+              min="0.01"
+              {...register("amount")}
+            />
+            {errors.amount && (
+              <p className="text-sm text-red-500">{errors.amount.message}</p>
+            )}
+          </div>
+        </div>
+
+         {/* Category and date */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            Category selector Component
+
+            {/* <CategorySelector
+              categories={categories || []}
+              onChange={(categoryId) => {
+                if (categoryId) {
+                  setValue("category", categoryId);
+                }
+              }}
+            /> */}
+          </div>
+           <div className="space-y-2">
+            <Label>Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? (
+                    format(selectedDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    setSelectedDate(date);
+                    setValue("date", date);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          </div>
+
+          
+        </div>
     </form>
   );
 };
