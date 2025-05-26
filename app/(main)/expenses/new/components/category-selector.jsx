@@ -1,6 +1,6 @@
  "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -28,6 +28,7 @@ export function CategorySelector({ categories, onChange }) {
   }
 
   // Set default value if not already set
+  useEffect(() => {
   if (!selectedCategory && categories.length > 0) {
     // Find a default category or use the first one
     const defaultCategory =
@@ -41,6 +42,7 @@ export function CategorySelector({ categories, onChange }) {
       }
     }, 0);
   }
+  }, []);
 
   return (
     <Select value={selectedCategory} onValueChange={handleCategoryChange}>
