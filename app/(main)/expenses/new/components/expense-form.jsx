@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { CategorySelector } from "./category-selector";
 import { GroupSelector } from "./group-selector";
+import { ParticipantSelector } from "./participant-selector";
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -184,7 +185,7 @@ const ExpenseForm = ({ type, onSuccess }) => {
         )}
 
         {/* Participants (for individual expenses) */}
-        {/* {type === "individual" && (
+        {type === "individual" && (
           <div className="space-y-2">
             <Label>Participants</Label>
             <ParticipantSelector
@@ -197,7 +198,7 @@ const ExpenseForm = ({ type, onSuccess }) => {
               </p>
             )}
           </div>
-        )} */}
+        )}
 
 
         </div>
