@@ -46,6 +46,19 @@ const ExpenseForm = ({ type, onSuccess }) => {
     const createExpense = useConvexMutation(api.expenses.createExpense);
     const categories = getAllCategories();
 
+    React.useEffect(() => {
+      if (currentUser && participants.length === 0) {
+        setParticipants([
+          {
+            id: currentUser._id,
+            name: currentUser.name,
+            email: currentUser.email,
+            imageUrl: currentUser.imageUrl,
+          },
+        ]);
+      }
+    }, [currentUser]);
+
     const {
     register,
     handleSubmit,
@@ -199,6 +212,27 @@ const ExpenseForm = ({ type, onSuccess }) => {
             )}
           </div>
         )}
+
+         {/* Paid by selector */}
+        <div className="space-y-2">
+          <Label>Paid by</Label>
+          <select
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            {...register("paidByUserId")}
+          >
+            <option value="">Select who paid</option>
+            {participants.map((participant) => (
+              <option key={participant.id} value={participant.id}>
+                {participant.id === currentUser._id ? "You" : participant.name}
+              </option>
+            ))}
+          </select>
+          {errors.paidByUserId && (
+            <p className="text-sm text-red-500">
+              {errors.paidByUserId.message}
+            </p>
+          )}
+        </div>
 
 
         </div>
