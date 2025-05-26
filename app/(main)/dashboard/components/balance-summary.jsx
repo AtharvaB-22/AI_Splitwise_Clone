@@ -72,7 +72,7 @@ const BalanceSummary = ({ balances }) => {
                     <span className="text-sm font-medium ">{item.name}</span>
                 </div>
 
-                <span className="font-medium text-green-600 ">Rs {item.amount.toFixed(2)}</span>
+                <span className="font-medium text-red-500 ">Rs {item.amount.toFixed(2)}</span>
             </Link>
             ))}
         </div>
