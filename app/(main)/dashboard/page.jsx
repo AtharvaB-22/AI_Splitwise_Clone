@@ -99,9 +99,9 @@ const DashboardPage = () => {
                     <div className="text-2xl font-bold text-green-600">
                     Rs {balances?.youAreOwed.toFixed(2)}
                     </div>  
-                    <p className="text-xs text-muted-foreground mt-1">
+                    {/* <p className="text-xs text-muted-foreground mt-1">
                     From {balances?.ownDetails?.youAreOwedBy?.length || 0} people
-                    </p>  
+                    </p>   */}
                 </CardContent>
             </Card>
 
@@ -117,9 +117,9 @@ const DashboardPage = () => {
                         <div className="text-2xl font-bold text-red-600">
                         Rs {balances?.youOwe.toFixed(2)}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        {/* <p className="text-xs text-muted-foreground mt-1">
                         To {balances?.oweDetails?.youOwe?.length || 0} people
-                        </p>
+                        </p> */}
                     </>
                     ) : (
                     <>
