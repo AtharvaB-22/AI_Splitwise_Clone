@@ -17,6 +17,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { CategorySelector } from "./category-selector";
+import { GroupSelector } from "./group-selector";
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -154,6 +155,49 @@ const ExpenseForm = ({ type, onSuccess }) => {
             </Popover>
           </div>
           </div>
+
+        {/* Group selector (for group expenses) */}
+        {type === "group" && (
+          <div className="space-y-2">
+            <Label>Group</Label>
+            <GroupSelector
+              onChange={(group) => {
+                // Only update if the group has changed to prevent loops
+                if (!selectedGroup || selectedGroup.id !== group.id) {
+                  setSelectedGroup(group);
+                  setValue("groupId", group.id);
+
+                  // Update participants with the group members
+                  if (group.members && Array.isArray(group.members)) {
+                    // Set the participants once, don't re-set if they're the same
+                    setParticipants(group.members);
+                  }
+                }
+              }}
+            />
+            {!selectedGroup && (
+              <p className="text-xs text-amber-600">
+                Please select a group to continue
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Participants (for individual expenses) */}
+        {/* {type === "individual" && (
+          <div className="space-y-2">
+            <Label>Participants</Label>
+            <ParticipantSelector
+              participants={participants}
+              onParticipantsChange={setParticipants}
+            />
+            {participants.length <= 1 && (
+              <p className="text-xs text-amber-600">
+                Please add at least one other participant
+              </p>
+            )}
+          </div>
+        )} */}
 
 
         </div>
