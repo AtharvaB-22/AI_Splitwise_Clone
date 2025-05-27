@@ -3,7 +3,7 @@ import "./globals.css";
 import ConvexClientProvider  from "@/components/convex-client-provider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
-import Header from "@/components/Header";
+import Header from "@/components/header";
 const inter = Inter({ subsets: ["latin"] });
 
 
